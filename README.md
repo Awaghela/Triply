@@ -51,7 +51,10 @@ live, tamper-evident record of who owes whom.
   transitive deps that broke reproducible builds. When no AWS credentials
   are configured, uploads fall back automatically to local disk storage
   (`backend/src/local_uploads.rs`) served back over plain HTTP — enough to
-  click through the whole receipt-upload flow with zero cloud setup. This
+  click through the whole receipt-upload flow with zero cloud setup. The
+  server derives its own public URL for these from each request's `Host`
+  header rather than a manually-set env var, so it's correct automatically
+  whether you're on `localhost`, behind Docker, or deployed anywhere else. This
   fallback is a dev/testing convenience only (no signature check on the
   upload URL, just an unguessable path); set real `AWS_S3_BUCKET` +
   credentials for anything beyond your own machine.
