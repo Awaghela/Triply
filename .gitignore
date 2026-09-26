@@ -1,0 +1,13 @@
+# Rust
+/backend/target
+/backend/.env
+/backend/uploads
+
+# Node
+/frontend/node_modules
+/frontend/.next
+/frontend/.env.local
+/bench/node_modules
+
+# OS
+.DS_Store

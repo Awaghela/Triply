@@ -1,0 +1,10 @@
+{
+  "name": "triply-bench",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "seed": "node seed.mjs",
+    "retry-test": "node retry-test.mjs",
+    "bench": "node latency-bench.mjs"
+  }
+}

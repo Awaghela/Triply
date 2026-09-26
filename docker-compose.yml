@@ -1,0 +1,59 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: triply
+      POSTGRES_PASSWORD: triply
+      POSTGRES_DB: triply
+    ports:
+      - "5432:5432"
+    volumes:
+      - triply_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U triply"]
+      interval: 3s
+      timeout: 3s
+      retries: 15
+
+  backend:
+    build:
+      context: ./backend
+    environment:
+      DATABASE_URL: postgres://triply:triply@postgres:5432/triply
+      JWT_SECRET: ${JWT_SECRET:-dev-jwt-secret-change-me}
+      ACTIVITY_HMAC_SECRET: ${ACTIVITY_HMAC_SECRET:-dev-activity-secret-change-me}
+      BIND_ADDR: 0.0.0.0:8080
+      AWS_S3_BUCKET: ${AWS_S3_BUCKET:-}
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      # Only used when AWS_S3_BUCKET is empty: where local-mode receipt
+      # uploads live, and the URL your browser (not other containers)
+      # reaches this server at -- localhost:8080 via the port mapping below.
+      LOCAL_UPLOADS_DIR: /app/uploads
+      PUBLIC_BASE_URL: http://localhost:8080
+    ports:
+      - "8080:8080"
+    volumes:
+      # Persists local-mode receipt photos across `docker compose up`/`down`
+      # restarts. Irrelevant once AWS_S3_BUCKET is set.
+      - triply_uploads:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8080
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  triply_pgdata:
+  triply_uploads:
