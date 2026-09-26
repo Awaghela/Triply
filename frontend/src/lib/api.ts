@@ -1,4 +1,9 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+// Trailing-slash-safe: every call site below does `${API_URL}${path}` with
+// `path` already starting with "/", so a trailing slash on the configured
+// URL (an easy mistake if it was copied from a browser address bar) would
+// otherwise produce a double slash the backend's router treats as an
+// unmatched path (404) on every single request.
+const API_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080").replace(/\/+$/, "");
 
 export class ApiClientError extends Error {
   status: number;
