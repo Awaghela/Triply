@@ -4,6 +4,8 @@ Collaborative trip planning and shared-expense management. Plan an itinerary
 together, log expenses as you go, split them four different ways, and see a
 live, tamper-evident record of who owes whom.
 
+**Live demo:** [triply-gamma-nine.vercel.app](https://triply-gamma-nine.vercel.app) ·
+
 **Stack:** Rust (Axum) · PostgreSQL · Next.js / TypeScript · Tailwind · Docker
 
 ```
@@ -11,8 +13,8 @@ live, tamper-evident record of who owes whom.
 │  Next.js UI │ ──────────────────▶ │ Axum backend │ ─────────────▶ │ PostgreSQL │
 │  (TS/React) │ ◀────────────────── │   (Rust)     │ ◀───────────── │            │
 └─────────────┘                     └──────┬───────┘                └────────────┘
-                                            │ presigned PUT
-                                            ▼
+                                           │ presigned PUT
+                                           ▼
                                      ┌─────────────┐
                                      │   AWS S3    │  (receipt images, optional)
                                      └─────────────┘
@@ -68,6 +70,11 @@ docker-compose.yml
 
 ## Running it
 
+```bash
+git clone https://github.com/Awaghela/Triply.git
+cd Triply
+```
+
 ### Quickest path: Docker Compose
 
 ```bash
@@ -76,7 +83,7 @@ docker compose up --build
 ```
 
 - Frontend: http://localhost:3000
-- Backend:  http://localhost:8080
+- Backend: http://localhost:8080
 - Postgres: localhost:5432 (user/pass/db: `triply`)
 
 Migrations run automatically on backend startup.
@@ -103,7 +110,7 @@ cargo run
 > This project uses sqlx's **runtime** query API (`sqlx::query`/`query_as`
 > with `.bind(...)`), not the `query!`/`query_as!` macros — so building it
 > never needs a live database connection or an offline query cache. A
-> connection is only needed once the binary actually *runs* (to execute
+> connection is only needed once the binary actually _runs_ (to execute
 > migrations and serve requests).
 
 Run the unit tests (split calculation, hash chain, settlement suggestions —
@@ -131,7 +138,15 @@ cd bench
 
 # 20 trips, 12 users, 500+ expenses across all four split modes
 node seed.mjs
+```
 
+The seed script also creates a dedicated `demo@triply.demo` / `password123`
+account and adds it as a member of **every** seeded trip — log in as that
+one to see the whole dataset from a single dashboard (the 12 regular seeded
+users each only belong to a random 3–6 of the 20 trips, which is more
+realistic but not what you want when demoing "500+ expenses, 20+ trips").
+
+```bash
 # 5 scenarios × concurrent/sequential/mismatched-body retries
 # (50+ individual retry requests) — asserts zero duplicate writes
 node retry-test.mjs
@@ -152,25 +167,25 @@ All endpoints except `/auth/*` and `/health` require `Authorization: Bearer
 <jwt>`. Full request/response shapes are in `backend/src/models.rs` and the
 handler modules under `backend/src/handlers/`.
 
-| Method | Path                                | Notes |
-|--------|-------------------------------------|-------|
-| POST   | `/auth/register` / `/auth/login`    | Returns `{ token, user }` |
-| GET    | `/trips`                            | Trips the caller belongs to |
-| POST   | `/trips`                            | Creates a trip; caller becomes owner |
-| GET/POST | `/trips/:id/members`              | List / invite (by email) |
-| DELETE | `/trips/:id/members/:userId`        | Admin/owner only |
-| GET/POST | `/trips/:id/itinerary`            | Day-by-day stops |
-| GET/POST | `/trips/:id/expenses`             | **Requires `Idempotency-Key`** |
-| DELETE | `/trips/:id/expenses/:id`           | Soft delete |
-| GET    | `/trips/:id/balances`               | Net balances + suggested transfers |
-| GET/POST | `/trips/:id/settlements`          | **Requires `Idempotency-Key`** |
-| GET    | `/trips/:id/activity`               | Hash-chained event log |
-| GET    | `/trips/:id/activity/verify`        | Recomputes & verifies the chain |
-| GET    | `/trips/:id/metrics`                | Totals, by-category, by-day |
-| POST   | `/trips/:id/receipts/presign`       | Upload target for a receipt photo (S3 or local disk, see below) |
-| PUT    | `/local-uploads/:trip_id/:filename` | Local-mode upload target (only used when S3 isn't configured) |
-| GET    | `/uploads/...`                      | Serves local-mode receipt photos back |
-| GET    | `/ws?trip_id=...`                   | Live event stream |
+| Method   | Path                                | Notes                                                           |
+| -------- | ----------------------------------- | --------------------------------------------------------------- |
+| POST     | `/auth/register` / `/auth/login`    | Returns `{ token, user }`                                       |
+| GET      | `/trips`                            | Trips the caller belongs to                                     |
+| POST     | `/trips`                            | Creates a trip; caller becomes owner                            |
+| GET/POST | `/trips/:id/members`                | List / invite (by email)                                        |
+| DELETE   | `/trips/:id/members/:userId`        | Admin/owner only                                                |
+| GET/POST | `/trips/:id/itinerary`              | Day-by-day stops                                                |
+| GET/POST | `/trips/:id/expenses`               | **Requires `Idempotency-Key`**                                  |
+| DELETE   | `/trips/:id/expenses/:id`           | Soft delete                                                     |
+| GET      | `/trips/:id/balances`               | Net balances + suggested transfers                              |
+| GET/POST | `/trips/:id/settlements`            | **Requires `Idempotency-Key`**                                  |
+| GET      | `/trips/:id/activity`               | Hash-chained event log                                          |
+| GET      | `/trips/:id/activity/verify`        | Recomputes & verifies the chain                                 |
+| GET      | `/trips/:id/metrics`                | Totals, by-category, by-day                                     |
+| POST     | `/trips/:id/receipts/presign`       | Upload target for a receipt photo (S3 or local disk, see below) |
+| PUT      | `/local-uploads/:trip_id/:filename` | Local-mode upload target (only used when S3 isn't configured)   |
+| GET      | `/uploads/...`                      | Serves local-mode receipt photos back                           |
+| GET      | `/ws?trip_id=...`                   | Live event stream                                               |
 
 ## Design notes
 
