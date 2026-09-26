@@ -10,7 +10,9 @@
  *   API_URL=http://localhost:8080 node bench/latency-bench.mjs
  */
 
-const API_URL = process.env.API_URL || "http://localhost:8080";
+// See the matching comment in seed.mjs: strips a trailing slash so
+// `${API_URL}${path}` never produces a double-slash 404.
+const API_URL = (process.env.API_URL || "http://localhost:8080").replace(/\/+$/, "");
 const REQUESTS_PER_ENDPOINT = 100;
 const CONCURRENCY = 10;
 

@@ -9,8 +9,11 @@
  * Usage:
  *   API_URL=http://localhost:8080 node bench/seed.mjs
  */
-
-const API_URL = process.env.API_URL || "http://localhost:8080";
+// Strip any trailing slash: naive `${API_URL}${path}` concatenation below
+// would otherwise produce a double slash (e.g. "...railway.app//auth/login")
+// whenever someone passes a URL copied with a trailing "/", which most
+// routers -- including this app's -- treat as an unmatched path (404).
+const API_URL = (process.env.API_URL || "http://localhost:8080").replace(/\/+$/, "");
 
 const FIRST_NAMES = [
   "Priya", "Marco", "Elena", "Jonah", "Aisha", "Diego",

@@ -20,8 +20,9 @@
  * Usage:
  *   API_URL=http://localhost:8080 node bench/retry-test.mjs
  */
-
-const API_URL = process.env.API_URL || "http://localhost:8080";
+// See the matching comment in seed.mjs: strips a trailing slash so
+// `${API_URL}${path}` never produces a double-slash 404.
+const API_URL = (process.env.API_URL || "http://localhost:8080").replace(/\/+$/, "");
 const CONCURRENCY_PER_SCENARIO = 10;
 const SCENARIO_COUNT = 5; // 5 scenarios x 10 concurrent requests = 50 retry requests exercised
 
